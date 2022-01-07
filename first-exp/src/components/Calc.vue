@@ -30,26 +30,34 @@
             </button>
         </div>
 
-        <div>
-            <label>
-                <input v-model="showScreenKeyboards" type="checkbox"> Отобразить экранную клавиатуру
-            </label>
+        <div class="calc-control">
+            <div>
+                <input type="checkbox" id="checkbox" v-model="showScreenKeyboards">
+                <label for="checkbox">Screen-keyboard</label>
+            </div>
+
+            <div class="calc-radio-buttons">
+                <input type="radio" id="radioOne" value="1" v-model="entryField">
+                <label for="radioOne">Number 1</label>
+                <input type="radio" id="radioTwo" value="2" v-model="entryField">
+                <label for="radioTwo">Number 2</label>
+            </div>
+
             <div v-if="showScreenKeyboards">
                 <button
-                    v-for="screenBtn in screenKeyboard"
-                    :key="screenBtn"
-                    @click="keyboardHandler(checked, screenBtn)"
+                    v-for="(number, index) in screenKeyboard"
+                    @click="inputPrint(number)"
+                    :key="index"
+                    :title="number"
                 >
-                    {{ screenBtn }}
+                    {{ number }}
                 </button>
-                <div>
-                    <label>
-                        <input type="radio" name="operand" v-model="checked" value="1"> Операнд 1
-                    </label>
-                    <label>
-                        <input type="radio" name="operand" v-model="checked" value="2"> Операнд 2
-                    </label>
-                </div>
+
+                <input
+                    type="button"
+                    value="Del"
+                    @click="inputDel"
+                >
             </div>
         </div>
 
@@ -69,14 +77,15 @@ export default {
   name: 'Calc',
   data: () => ({
     operands: ['+', '-', '/', '*', '^', 'int /'],
-    screenKeyboard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'Del'],
+    screenKeyboard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     checked: 1,
     showScreenKeyboards: true,
-    op1: [],
-    op2: [],
+    op1: '',
+    op2: '',
     result: 0,
     error: '',
-    logs: {}
+    logs: {},
+    entryField: '1'
   }),
   methods: {
     add () {
@@ -145,23 +154,38 @@ export default {
       this.$set(this.logs, key, value)
     },
 
-    keyboardHandler (checkedOperand, button) {
-      const { op1, op2 } = this
-      if (+checkedOperand === 1) {
-        if (button === 'Del') {
-          this.op1.pop()
-        } else {
-          this.op1.push(button.toString())
-        }
-        this.op1 = +op1.join('')
-      } else if (+checkedOperand === 2) {
-        if (button === 'Del') {
-          this.op2.pop()
-        } else {
-          this.op2.push(button.toString())
-        }
-        this.op2 = +op2.join('')
+    inputPrint (number) {
+      if (this.entryField === '1') {
+        this.op1 = this.op1 + number
+      } else {
+        this.op2 = this.op2 + number
       }
+    },
+
+    inputDel () {
+      if (this.entryField === '1') {
+        const newNumber = this.delLastNumber(this.op1)
+        if (newNumber !== null) {
+          this.op1 = newNumber
+        }
+      } else {
+        const newNumber = this.delLastNumber(this.op2)
+        if (newNumber !== null) {
+          this.op2 = newNumber
+        }
+      }
+    },
+
+    delLastNumber (value) {
+      const str = value.toString()
+      if (str.length < 1) {
+        return null
+      }
+      value = +(str.slice(0, -1))
+      if (isNaN(value)) {
+        value = 0
+      }
+      return value
     }
   }
 }
