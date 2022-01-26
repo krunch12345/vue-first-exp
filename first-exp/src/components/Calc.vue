@@ -1,196 +1,107 @@
 <template>
     <div>
-        <h2>Calculator</h2>
-
         <div class="main">
             <label for="op1">
-                <input id="op1" type="number" v-model.number="op1">
+                <input id="op1" type="number" v-model.number="op1" name="op1">
             </label>
 
             <label for="op2">
-                <input id="op2" type="number" v-model.number="op2">
+                <input id="op2" type="number" v-model.number="op2" name="op2">
             </label>
-
-            = {{ result }}
+            = {{ result }} <br/>
+            Fibonacci-1 = {{ fib1 }} <br/>
+            Fibonacci-2 = {{ fib2() }}
         </div>
-
-        <div v-if="error">
-            Ошибка! {{ error }}
-        </div>
-
         <div class="keyboard">
             <button
-                v-for="operand in operands"
-                @click="calc(operand)"
-                :key = operand
-                :title = operand
-                :disabled="op1 === '' || op2 === ''"
+                v-for="operator in operators"
+                @click="calculate(operator)"
+                :title="operator"
+                :key="operator"
+                :name="operator"
             >
-                {{ operand }}
+                {{ operator }}
             </button>
         </div>
-
-        <div class="calc-control">
-            <div>
-                <input type="checkbox" id="checkbox" v-model="showScreenKeyboards">
-                <label for="checkbox">Screen-keyboard</label>
-            </div>
-
-            <div class="calc-radio-buttons">
-                <input type="radio" id="radioOne" value="1" v-model="entryField">
-                <label for="radioOne">Number 1</label>
-                <input type="radio" id="radioTwo" value="2" v-model="entryField">
-                <label for="radioTwo">Number 2</label>
-            </div>
-
-            <div v-if="showScreenKeyboards">
-                <button
-                    v-for="(number, index) in screenKeyboard"
-                    @click="inputPrint(number)"
-                    :key="index"
-                    :title="number"
-                >
-                    {{ number }}
-                </button>
-
-                <input
-                    type="button"
-                    value="Del"
-                    @click="inputDel"
-                >
-            </div>
-        </div>
-
         <div class="logs">
-            <div
-                v-for="(log, id) in logs"
-                :key="id"
-            >
-                {{ log }}
-            </div>
+            {{ logs }}
         </div>
     </div>
 </template>
 
 <script>
 export default {
-  name: 'Calc',
+  name: 'CalculatorComp',
   data: () => ({
-    operands: ['+', '-', '/', '*', '^', 'int /'],
-    screenKeyboard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-    checked: 1,
-    showScreenKeyboards: true,
-    op1: '',
-    op2: '',
+    op1: 0,
+    op2: 0,
     result: 0,
     error: '',
-    logs: {},
-    entryField: '1'
+    operators: ['+', '-', '/', '*'],
+    collection: [1, 2, 3, 4],
+    logs: {}
   }),
   methods: {
-    add () {
+    sum () {
       const { op1, op2 } = this
+
       this.result = op1 + op2
     },
+
     sub () {
       const { op1, op2 } = this
+
       this.result = op1 - op2
     },
+
     div () {
       const { op1, op2 } = this
-      if (op2 === 0) {
-        this.error = 'Делить на 0 нельзя!'
-      } else {
-        this.result = op1 / op2
-      }
+
+      if (op2 === 0) this.error = 'На ноль делить нельзя.'
+      else this.result = op1 / op2
     },
-    multi () {
+
+    mult () {
       const { op1, op2 } = this
+
       this.result = op1 * op2
     },
-    pow () {
-      const { op1, op2 } = this
-      this.result = Math.pow(op1, op2)
-    },
-    intDiv () {
-      const { op1, op2 } = this
-      if (op2 === 0) {
-        this.error = 'Делить на 0 нельзя!'
-      } else {
-        const tempResult = op1 / op2
-        this.result = tempResult >= 0
-          ? Math.floor(tempResult)
-          : Math.ceil(tempResult)
-      }
-    },
-    calc (operation = '+') {
+
+    calculate (operation) {
       this.error = ''
-
+      const { op1, op2 } = this
+      // eslint-disable-next-line default-case
       switch (operation) {
-        case '+':
-          this.add()
-          break
-        case '-':
-          this.sub()
-          break
-        case '*':
-          this.multi()
-          break
-        case '/':
-          this.div()
-          break
-        case 'int /':
-          this.intDiv()
-          break
-        case '^':
-          this.pow()
-          break
+        case '+': this.sum(); break
+        case '-': this.sub(); break
+        case '/': this.div(); break
+        case '*': this.mult(); break
       }
 
-      const key = Date.now()
-
-      const value = `${this.op1}${operation}${this.op2}=${this.result}`
-
-      this.$set(this.logs, key, value)
+      this.$set(this.logs, Date.now(), `${op1} ${operation} ${op2}`)
     },
 
-    inputPrint (number) {
-      if (this.entryField === '1') {
-        this.op1 = this.op1 + number
-      } else {
-        this.op2 = this.op2 + number
-      }
+    fib (n) {
+      return n <= 1 ? n : this.fib(n - 1) + this.fib(n - 2)
     },
 
-    inputDel () {
-      if (this.entryField === '1') {
-        const newNumber = this.delLastNumber(this.op1)
-        if (newNumber !== null) {
-          this.op1 = newNumber
-        }
-      } else {
-        const newNumber = this.delLastNumber(this.op2)
-        if (newNumber !== null) {
-          this.op2 = newNumber
-        }
-      }
-    },
+    fib2 () {
+      const { op2 } = this
 
-    delLastNumber (value) {
-      const str = value.toString()
-      if (str.length < 1) {
-        return null
-      }
-      value = +(str.slice(0, -1))
-      if (isNaN(value)) {
-        value = 0
-      }
-      return value
+      return this.fib(op2)
+    }
+  },
+
+  computed: {
+    fib1 () {
+      const { op1 } = this
+
+      return this.fib(op1)
     }
   }
 }
 </script>
 
-<style module>
+<style scoped>
 
 </style>
